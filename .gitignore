@@ -1,0 +1,10 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+output/
+eval_result/
+data/
+wandb/
+*.log
+/test/
+/docs/

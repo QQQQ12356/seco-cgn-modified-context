@@ -6,5 +6,5 @@ eval_result/
 data/
 wandb/
 *.log
-/test/
-/docs/
+tests/
+docs/

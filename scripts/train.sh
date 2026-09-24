@@ -1,17 +1,53 @@
 #!/usr/bin/env bash
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+export TOKENIZERS_PARALLELISM=false
+export WANDB_MODE="${WANDB_MODE:-disabled}"
+export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1}"
+TORCHRUN="${TORCHRUN:-${HOME}/miniconda3/envs/icae_v2/bin/torchrun}"
+NUM_GPUS="${NUM_GPUS:-2}"
+SEED="${SEED:-42}"
+BF16=True
+ENCODER_LAST_HIDDEN_ONLY=True
+REPORT_TO=none
+
+MODEL_NAME="${MODEL_NAME:-meta-llama/Llama-3.2-1B-Instruct}"
+MODEL_SHORT="${MODEL_NAME##*/}"
+COMPRESS_RATIO="${COMPRESS_RATIO:-32}"
+COMPRESSOR_VERSION="${COMPRESSOR_VERSION:-context_adaptive_v1}"
+BUDGET_MODE=strict_context
+LEGACY_BUDGET_MODE=strict_context
+
+QUERY_ATTENTION_MODE=dot
+QUERY_MODE=multi_slot
+DIVERSITY_MODE=attention
+QUERY_SLOTS=8
+RELEVANCE_DIM=256
+QUERY_PHRASE_WIDTHS=(2 4)
+
+CONTEXT_WINDOW_WIDTHS=(8 32)
+BLOCK_WIDTH="${BLOCK_WIDTH:-128}"
+BOUNDARY_MODE="${BOUNDARY_MODE:-semantic}"
+CONTEXT_BUDGET_MODE="${CONTEXT_BUDGET_MODE:-adaptive}"
+MERGE_MODE="${MERGE_MODE:-hybrid}"
+NOVELTY_WEIGHT="${NOVELTY_WEIGHT:-0.5}"
+BOUNDARY_RADIUS="${BOUNDARY_RADIUS:-0.25}"
+ANCHOR_WEIGHT="${ANCHOR_WEIGHT:-0.35}"
+
+TAG="${TAG:-${COMPRESSOR_VERSION}}"
+OUTPUT_DIR="${OUTPUT_DIR:-${ROOT}/output/${TAG}/${MODEL_SHORT}/ratio_${COMPRESS_RATIO}}"
 
 TRAIN_SCRIPT="${ROOT}/instruction_finetune.py"
-TRAIN_FILE="${TRAIN_FILE:-"/home/huangzj/proj/clustering/data/mrqa_train_24000_converted.jsonl"}"
-DEV_FILE="${DEV_FILE:-"/home/huangzj/proj/clustering/data/mrqa_dev_24000_converted.jsonl"}"
+TRAIN_FILE="${TRAIN_FILE:-/home/huangzj/proj/clustering/data/mrqa_train_24000_converted.jsonl}"
+DEV_FILE="${DEV_FILE:-/home/huangzj/proj/clustering/data/mrqa_train_sample_debug_3000_converted.jsonl}"
 MASTER_PORT="${MASTER_PORT:-29524}"
-PER_DEVICE_TRAIN_BATCH_SIZE="${BATCH_SIZE:-1}"
+PER_DEVICE_TRAIN_BATCH_SIZE="${BATCH_SIZE:-2}"
 MAX_STEPS="${MAX_STEPS:-20000}"
-SAVE_STEPS="${SAVE_STEPS:-5000}"
+SAVE_STEPS="${SAVE_STEPS:-10000}"
 TRAIN=True
 DDP_FIND_UNUSED_PARAMETERS=True
-CONFIRM_TRAIN="${CONFIRM_TRAIN:-0}"
+CONFIRM_TRAIN="${CONFIRM_TRAIN:-1}"
 
 cd "$ROOT"
 
